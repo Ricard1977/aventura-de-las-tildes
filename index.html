@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
   <script src="config.js?v=4" defer></script>
-  <script src="app.js?v=5" defer></script>
+  <script src="app.js?v=6" defer></script>
   <script src="icons.js?v=1" defer></script>
 </head>
 <body>
@@ -41,9 +41,27 @@
    </section>
    <section id="results" class="screen"><div class="pane result-card"><div class="result-emoji" id="result-emoji">🏆</div><div class="eyebrow">MISIÓN COMPLETADA</div><h1 id="result-title">¡Menuda partida!</h1><p id="result-desc"></p><div class="result-score"><strong id="result-score">0</strong><span>puntos conseguidos</span></div><div class="result-breakdown"><span>✅ <b id="result-correct">0</b> aciertos</span><span>❌ <b id="result-wrong">0</b> fallos</span></div><div class="result-actions"><button id="play-again" class="btn primary">Jugar otra vez 🔁</button><button data-view="ranking" class="btn secondary">Ver clasificación 🏆</button></div></div></section>
    <section id="ranking" class="screen"><div class="ranking-head"><div><div class="eyebrow">🏅 SALÓN DE LA FAMA</div><h1>La liga de campeones</h1><p>¡Cada partida cuenta! Compite con tus amigos y supera tu marca.</p></div><div class="trophy">🏆</div></div><div class="pane ranking-pane"><div class="between"><h2>Clasificación general</h2><span class="pill" id="ranking-mode">Este dispositivo</span></div><div class="ranking-table-head"><span>POS.</span><span>JUGADOR</span><span>PUNTOS</span></div><div id="ranking-list"></div><p id="ranking-explain" class="small-note"></p></div><button data-view="home" class="btn secondary">← Volver a jugar</button></section>
+   <section id="admin" class="screen"><div class="pane">
+    <div class="eyebrow">PANEL PRIVADO</div><h1>Administración de jugadores</h1>
+    <p>Solo para adultos autorizados. Puedes eliminar perfiles de este dispositivo o jugadores de la clasificación compartida.</p>
+    <form id="admin-form" autocomplete="on">
+      <label for="admin-email">CORREO DEL ADMINISTRADOR</label><input id="admin-email" type="email" autocomplete="username" required placeholder="Correo de Supabase Auth">
+      <label for="admin-password">CONTRASEÑA</label><input id="admin-password" type="password" autocomplete="current-password" required placeholder="Contraseña de administrador">
+      <button class="btn primary" type="submit">Entrar como administrador</button>
+    </form>
+    <p id="admin-status" role="status" class="small-note"></p>
+    <div id="admin-content" class="hidden">
+      <div class="between"><h2>Perfiles guardados aquí</h2><span class="pill">Solo este navegador</span></div>
+      <div id="admin-local"></div>
+      <div class="between"><h2>Clasificación global</h2><span class="pill">Todos los dispositivos</span></div>
+      <div id="admin-global"></div>
+      <button id="admin-signout" class="btn secondary" type="button">Cerrar sesión de administrador</button>
+    </div>
+    <button class="btn secondary" data-view="welcome" type="button">Volver</button>
+   </div></section>
   </main>
   <nav class="bottom-nav" id="main-nav" aria-label="Navegación"><button data-view="home">🏠 <span>Inicio</span></button><button data-view="ranking">🏆 <span>Clasificación</span></button><button id="nav-profile">👤 <span>Jugador</span></button></nav>
-  <footer>Hecho para aprender jugando · No compartas datos personales 💜</footer>
+  <footer>Hecho para aprender jugando · No compartas datos personales 💜 · <button id="open-admin" class="text-button" type="button">Administración</button></footer>
  </div>
 </body>
 </html>
