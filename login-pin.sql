@@ -49,7 +49,7 @@ returns boolean language plpgsql security definer set search_path='' as $$
 declare v_player uuid;
 begin
  if auth.uid() is null then raise exception 'Sesión requerida'; end if;
- if p_pin !~ '^[0-9]{1,4}$' then raise exception 'El PIN debe tener entre 6 y 8 cifras'; end if;
+ if p_pin !~ '^[0-9]{1,4}$' then raise exception 'El PIN debe tener entre 1 y 4 cifras'; end if;
  select id into v_player from public.liga_tildes_players
  where lower(nickname)=lower(trim(p_nickname))
  and (owner_id=auth.uid() or exists (
