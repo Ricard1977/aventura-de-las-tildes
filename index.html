@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#6345db">
   <meta name="description" content="Aprende las tildes jugando. Diez retos, amigos y clasificación.">
   <title>La Liga de las Tildes ✨</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
   <script src="config.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=3" defer></script>
 </head>
 <body>
  <div class="spark s1">✦</div><div class="spark s2">★</div><div class="spark s3">✧</div>
@@ -28,7 +28,7 @@
      <form id="join-form"><label for="nickname">TU APODO</label><input id="nickname" maxlength="18" minlength="3" autocomplete="off" placeholder="Ej.: RayoTilde7" required pattern="[A-Za-zÀ-ÿ0-9_-]{3,18}"><label>ELIGE UN AVATAR</label><div class="avatar-grid" id="avatars" role="group" aria-label="Elegir avatar"></div><button type="submit" class="btn primary">¡Quiero jugar! <span>➜</span></button><p class="small-note" id="join-message" role="status"></p></form>
     </div>
    </section>
-   <section id="home" class="screen"><div class="greeting"><div><div class="eyebrow">✦ TU CAMPAMENTO BASE</div><h1>¡Hola, <span id="hello-name">estrella</span>! 👋</h1><p>Tu próxima aventura ortográfica te espera.</p></div><div class="hero-avatar" id="home-avatar"><img class="animal-avatar" src="avatars/fox.svg" alt="Zorro" width="95" height="95"></div></div>
+   <section id="home" class="screen"><div class="greeting"><div><div class="eyebrow">✦ TU CAMPAMENTO BASE</div><h1>¡Hola, <span id="hello-name">estrella</span>! 👋</h1><p>Tu próxima aventura ortográfica te espera.</p></div><div class="hero-avatar" id="home-avatar"><img class="animal-avatar" src="avatars/fox.svg?v=3" alt="Zorro" width="95" height="95"></div></div>
     <div class="stats-grid"><div class="stat"><span>🌟 PUNTOS TOTALES</span><strong id="total-score">0</strong></div><div class="stat"><span>🎮 PARTIDAS</span><strong id="total-games">0</strong></div><div class="stat"><span>🎯 ACIERTOS</span><strong id="total-hits">0</strong></div></div>
     <div class="home-grid"><div class="pane mission"><div class="eyebrow">🎯 NUEVA MISIÓN</div><h2>10 palabras, ¡a por todas!</h2><p>Cuatro tipos de retos sorpresa. Cada acierto suma <b>+1</b>, cada fallo resta <b>−0,5</b>.</p><div class="type-pills"><span>🔎 Sílaba tónica</span><span>✍️ Pon la tilde</span><span>🛠️ Corrige</span><span>🧠 Clasifica</span></div><button id="start-game" class="btn primary">Empezar partida <span>🚀</span></button></div>
     <div class="pane mini-ranking"><div class="between"><h2>🏆 Clasificación</h2><button class="text-button" data-view="ranking">Ver todo →</button></div><div id="ranking-preview"></div><p class="small-note" id="ranking-status"></p></div></div>
