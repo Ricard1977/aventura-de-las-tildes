@@ -14,7 +14,7 @@ if(node.nodeType===3){
  while((m=re.exec(s))!==null){
   if(m.index>last)frag.appendChild(document.createTextNode(s.slice(last,m.index)));
   var img=document.createElement('img');
-  img.className='ui-svg-icon';img.src='icons/'+icons[m[0]]+'.svg';img.alt=m[0];img.width=20;img.height=20;
+  img.className='ui-svg-icon';img.src='icons/'+icons[m[0]]+'.svg?v=2';img.alt=m[0];img.width=20;img.height=20;
   frag.appendChild(img);
   last=m.index+m[0].length;
  }
