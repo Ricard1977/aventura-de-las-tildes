@@ -159,7 +159,7 @@ $('admin-signout').onclick=async function(){
 function validPin(pin){return /^[0-9]{1,4}$/.test(pin)}
 async function setPlayerPin(pin){
  if(!onlineReady)throw new Error('Primero debe estar conectada la Liga global.');
- if(!validPin(pin))throw new Error('El PIN debe tener entre 6 y 8 cifras.');
+ if(!validPin(pin))throw new Error('El PIN debe tener entre 1 y 4 cifras.');
  const result=await db.rpc('liga_set_pin',{p_nickname:player.name,p_pin:pin});
  if(result.error)throw result.error;
 }
