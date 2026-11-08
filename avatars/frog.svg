@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="frog"><rect width="128" height="128" rx="30" fill="#f2eaff"/>
+
+
+<circle cx="36" cy="32" r="18" fill="#6ecb78"/><circle cx="92" cy="32" r="18" fill="#6ecb78"/>
+<ellipse cx="64" cy="68" rx="46" ry="43" fill="#6ecb78" stroke="#604762" stroke-width="4"/>
+
+
+
+
+
+
+
+
+<ellipse cx="45" cy="67" rx="5" ry="7" fill="#302b40"/><ellipse cx="83" cy="67" rx="5" ry="7" fill="#302b40"/>
+<path d="M47 84Q64 100 81 84" fill="none" stroke="#426d4f" stroke-width="4" stroke-linecap="round"/>
+
+</svg>
