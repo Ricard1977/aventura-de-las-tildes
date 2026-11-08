@@ -81,6 +81,80 @@ if(type==='classify'){['aguda','llana','esdrújula'].forEach(t=>addButton(area,t
 function answer(ok){if(locked)return;locked=true;const w=deck[index].word;score+=ok?1:-0.5;if(ok)hits++;$('round-score').textContent=fmt(score);$('feedback').className='feedback '+(ok?'good':'bad');$('feedback').textContent=(ok?'🌟 ¡Correcto! +1 punto. ':'💡 Casi. −0,5 puntos. ')+'Respuesta: '+w.word+' · '+w.syllables.join(' · ')+' · '+w.kind+'.';document.querySelectorAll('#question-area button,#question-area input').forEach(x=>x.disabled=true);$('next-question').classList.remove('hidden')}
 async function finish(){player.score=Math.round((player.score+score)*2)/2;player.games++;player.hits+=hits;save();$('result-score').textContent=fmt(score);$('result-correct').textContent=hits;$('result-wrong').textContent=10-hits;$('result-emoji').textContent=hits>=8?'🏆':hits>=5?'🌟':'💪';$('result-title').textContent=hits>=8?'¡Eres una estrella!':hits>=5?'¡Gran aventura!':'¡Sigue practicando!';$('result-desc').textContent='Has terminado 10 tarjetas. Tu puntuación acumulada es '+fmt(player.score)+' puntos.';view('results');await sync()}
 async function ranking(preview=false){let list=Object.values(profiles),shared=false;if(onlineReady){try{const {data,error}=await db.from('liga_tildes_players').select('nickname,avatar,score,games,hits').order('score',{ascending:false}).limit(100);if(error)throw error;list=data.map(p=>({...p,name:p.nickname,score:Number(p.score)}));shared=true}catch(e){console.warn(e)}}list.sort((a,b)=>b.score-a.score||b.hits-a.hits||a.name.localeCompare(b.name,'es'));const html=(preview?list.slice(0,5):list).map((p,i)=>'<div class="rank-row"><span>'+(['🥇','🥈','🥉'][i]||i+1)+'</span><span class="player">'+avatarHtml(p.avatar)+' '+safe(p.name)+'</span><strong>'+fmt(p.score)+' ⭐</strong></div>').join('')||'<p>Aún no hay participantes.</p>';if(preview){$('ranking-preview').innerHTML=html;$('ranking-status').textContent=shared?'Clasificación compartida':'Clasificación de este dispositivo'}else{$('ranking-list').innerHTML=html;$('ranking-mode').textContent=shared?'Todos los jugadores':'Este dispositivo';$('ranking-explain').textContent=shared?'Usa apodos, nunca datos personales.':'Para compartir puntos entre dispositivos, configura Supabase según el README.'}}
+// Administración separada: no cambia la sesión anónima con la que juegan los niños.
+let adminClient=null,adminAccess=false;
+function adminDb(){
+ if(!db)throw new Error('La liga global todavía no está conectada');
+ if(!adminClient)adminClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,
+   {auth:{storageKey:'liga-tildes-admin-session',persistSession:true,autoRefreshToken:true}});
+ return adminClient;
+}
+function adminStatus(s){$('admin-status').textContent=s}
+function adminRow(p,scope){
+ const row=document.createElement('div');row.className='rank-row';
+ const name=document.createElement('span');name.className='player';
+ const avatarPic=document.createElement('span');avatarPic.innerHTML=avatarHtml(p.avatar);
+ name.appendChild(avatarPic);name.appendChild(document.createTextNode(' '+p.name));
+ const points=document.createElement('strong');points.textContent=fmt(Number(p.score)||0)+' pts';
+ const btn=document.createElement('button');btn.className='btn secondary';
+ btn.textContent='Borrar';btn.type='button';
+ btn.style.gridColumn='1/-1';btn.style.justifySelf='end';
+ btn.addEventListener('click',async function(){
+   if(!adminAccess)return;
+   const msg=scope==='global'?'¿Borrar DEFINITIVAMENTE de la clasificación global a '+p.name+'?':'¿Borrar el perfil local de '+p.name+' de este navegador?';
+   if(!confirm(msg))return;
+   btn.disabled=true;
+   try{
+     if(scope==='global'){
+       const result=await adminDb().rpc('liga_admin_delete_player',{p_nickname:p.name});
+       if(result.error)throw result.error;
+       if(!result.data)throw new Error('No se ha encontrado ese jugador');
+       const localName=Object.keys(profiles).find(x=>x.toLowerCase()===p.name.toLowerCase());
+       if(localName){delete profiles[localName];save();if(player&&player.name===localName){player=null;localStorage.removeItem('liga-last-user')}}
+     }else{
+       delete profiles[p.name];save();
+       if(player&&player.name===p.name){player=null;localStorage.removeItem('liga-last-user')}
+     }
+     adminStatus('Jugador borrado de '+(scope==='global'?'la liga global':'este dispositivo')+'.');
+     await adminRender();
+   }catch(e){adminStatus('No se pudo borrar: '+(e.message||e));btn.disabled=false}
+ });
+ row.appendChild(document.createElement('span'));row.appendChild(name);row.appendChild(points);row.appendChild(btn);
+ return row;
+}
+async function adminRender(){
+ if(!adminAccess)return;
+ const local=$('admin-local'),global=$('admin-global');
+ local.replaceChildren();global.replaceChildren();
+ const owned=Object.values(profiles).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+ if(!owned.length)local.textContent='No hay perfiles locales.';
+ for(const p of owned)local.appendChild(adminRow(p,'local'));
+ const response=await adminDb().from('liga_tildes_players').select('nickname,avatar,score').order('score',{ascending:false}).limit(500);
+ if(response.error)throw response.error;
+ if(!response.data.length)global.textContent='No hay jugadores globales.';
+ for(const p of response.data)global.appendChild(adminRow({...p,name:p.nickname},'global'));
+}
+$('open-admin').onclick=function(){view('admin');if(adminAccess)adminRender()};
+$('admin-form').onsubmit=async function(e){
+ e.preventDefault();adminStatus('Comprobando autorización...');
+ try{
+  const client=adminDb();
+  const login=await client.auth.signInWithPassword({email:$('admin-email').value.trim(),password:$('admin-password').value});
+  $('admin-password').value='';
+  if(login.error)throw login.error;
+  const check=await client.rpc('liga_admin_check');
+  if(check.error)throw check.error;
+  if(check.data!==true){await client.auth.signOut();throw new Error('Esta cuenta no está autorizada como administradora. Ejecuta admin.sql y registra tu User UID.')}
+  adminAccess=true;$('admin-form').classList.add('hidden');$('admin-content').classList.remove('hidden');
+  adminStatus('Acceso de administrador autorizado.');
+  await adminRender();
+ }catch(error){adminStatus('Acceso no disponible: '+(error.message||error))}
+};
+$('admin-signout').onclick=async function(){
+ if(adminClient)await adminClient.auth.signOut();
+ adminAccess=false;$('admin-form').classList.remove('hidden');$('admin-content').classList.add('hidden');
+ adminStatus('Sesión de administrador cerrada.');
+};
 $('join-form').onsubmit=async e=>{e.preventDefault();let name=$('nickname').value.trim();if(!/^[a-zA-ZÀ-ÿ0-9_-]{3,18}$/.test(name)){$('join-message').textContent='Usa entre 3 y 18 letras o números, sin espacios.';return}if(profiles[name]){$('join-message').textContent='Ese apodo ya existe en este dispositivo.';return}profiles[name]={name,avatar,score:0,games:0,hits:0};save();selectPlayer(name);await sync()};
 $('switch-profile').onclick=$('nav-profile').onclick=()=>{player=null;$('nickname').value='';$('join-message').textContent='';view('welcome')};
 $('start-game').onclick=begin;$('play-again').onclick=begin;$('next-question').onclick=()=>{index++;index===10?finish():question()};$('leave-game').onclick=()=>{if(confirm('¿Salir de la partida? Perderás los puntos de esta ronda.'))view('home')};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>view(b.dataset.view));avatars();connect().then(()=>{const last=localStorage.getItem('liga-last-user');if(last&&profiles[last])selectPlayer(last);else view('welcome')});
