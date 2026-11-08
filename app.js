@@ -156,7 +156,7 @@ $('admin-signout').onclick=async function(){
  adminAccess=false;$('admin-form').classList.remove('hidden');$('admin-content').classList.add('hidden');
  adminStatus('Sesión de administrador cerrada.');
 };
-function validPin(pin){return /^[0-9]{6,8}$/.test(pin)}
+function validPin(pin){return /^[0-9]{1,4}$/.test(pin)}
 async function setPlayerPin(pin){
  if(!onlineReady)throw new Error('Primero debe estar conectada la Liga global.');
  if(!validPin(pin))throw new Error('El PIN debe tener entre 6 y 8 cifras.');
@@ -177,11 +177,11 @@ $('join-form').onsubmit=async function(e){
  if(!/^[a-zA-ZÀ-ÿ0-9_-]{3,18}$/.test(name)){$('join-message').textContent='Usa un apodo de 3 a 18 letras o números.';return}
  if(profiles[name]){
   selectPlayer(name);
-  if(pin){try{await setPlayerPin(pin)}catch(err){$('pin-status').textContent='PIN no configurado: '+(err.message||err)}}
   return;
  }
+ if(!validPin(pin)){$('join-message').textContent='Para crear un jugador introduce un PIN de 1 a 4 cifras.';return}
  if(onlineReady){
-  if(!validPin(pin)){$('join-message').textContent='Para crear un jugador global introduce un PIN de 6 a 8 cifras.';return}
+  if(!validPin(pin)){$('join-message').textContent='Para crear un jugador global introduce un PIN de 1 a 4 cifras.';return}
   try{
    const found=await db.from('liga_tildes_players').select('id').ilike('nickname',name).maybeSingle();
    if(found.error)throw found.error;
@@ -201,7 +201,7 @@ $('login-player').onclick=async function(){
  if(!name){$('join-message').textContent='Escribe primero tu apodo.';return}
  if(profiles[name]){selectPlayer(name);return}
  if(!onlineReady){$('join-message').textContent='Se necesita la Liga global para entrar desde otro dispositivo.';return}
- if(!validPin(pin)){$('join-message').textContent='Introduce tu PIN de 6 a 8 cifras.';return}
+ if(!validPin(pin)){$('join-message').textContent='Introduce tu PIN de 1 a 4 cifras.';return}
  $('join-message').textContent='Comprobando PIN...';
  try{
   const response=await db.rpc('liga_login_player',{p_nickname:name,p_pin:pin});
