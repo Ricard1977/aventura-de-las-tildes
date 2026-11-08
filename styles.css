@@ -5,3 +5,8 @@
 .avatar-grid button{display:inline-flex;align-items:center;justify-content:center;min-width:62px;min-height:62px}
 .rank-row .animal-avatar{width:30px;height:30px;margin-right:7px}
 .rank-row .player{display:flex;align-items:center;gap:4px}
+
+/* Los símbolos visibles son SVG independientes de las fuentes del sistema. */
+.ui-svg-icon{display:inline-block;vertical-align:-0.22em;width:1.15em;height:1.15em;object-fit:contain;margin:0 .08em}
+.question-symbol .ui-svg-icon,.result-emoji .ui-svg-icon,.trophy .ui-svg-icon{width:1em;height:1em}
+.float-star .ui-svg-icon{width:1em;height:1em}
