@@ -1,6 +1,6 @@
 # 🌟 La Liga de las Tildes
 
-Juego para alumnado de 5.º–6.º de Primaria. 60 palabras revisadas, partidas de 10 tarjetas aleatorias, cuatro actividades (sílaba tónica, poner tilde, corregir y clasificar), puntuación +1/−0,5 y clasificación.
+Juego para alumnado de 5.º–6.º de Primaria. 300 palabras (100 agudas, 100 llanas y 100 esdrújulas), partidas de 10 tarjetas sin repetir hasta agotar el repertorio de cada jugador, cuatro actividades (sílaba tónica, poner tilde, corregir y clasificar), puntuación +1/−0,5 y clasificación.
 
 ## Jugar en local
 
@@ -48,3 +48,10 @@ values ('AQUI_TU_USER_UID');
 5. En el panel puedes borrar **perfiles locales de ese navegador** o borrar **jugadores globales de la clasificación compartida**. La eliminación global es definitiva y requiere confirmación. Borrar usuarios de otro navegador solo es posible de forma global; el almacenamiento local de otros dispositivos no puede borrarse remotamente.
 
 **Seguridad:** el borrado global está protegido por una función de Supabase con comprobación explícita de administrador. No publiques tu contraseña, tu UID ni claves secretas en el código o en mensajes. Los perfiles antiguos necesitan configurar su PIN desde un navegador autorizado antes de poder recuperarlos en otro dispositivo.
+
+## Vocabulario y revisión ortográfica
+
+- **300 palabras:** 60 originales en `app.js` y 240 añadidas en `words-extra.js`.
+- Las 240 entradas se comprobaron mediante validaciones automáticas: palabra reconstruida a partir de sus sílabas, posición de la sílaba tónica, categoría y ausencia de apodos duplicados. Se contrastaron las reglas con la Ortografía de la RAE y se consultaron entradas seleccionadas del DLE. **No se ha contrastado individualmente cada una de las 240 entradas del DLE.**
+- La función `plain()` elimina solo tildes vocálicas, sin modificar la letra **ñ** (por ejemplo, `montaña` no se convierte en `montana`).
+- Cada jugador tiene una bolsa aleatoria de palabras, persistida localmente: se recorren las 300 antes de repetir; al terminar se reinicia una bolsa nueva. No modifica puntuaciones ni perfiles.
