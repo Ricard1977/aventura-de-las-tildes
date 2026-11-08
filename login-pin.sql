@@ -66,17 +66,17 @@ begin
  if auth.uid() is null then raise exception 'Sesión requerida'; end if;
  select * into v_player from public.liga_tildes_players p
  where lower(p.nickname)=lower(trim(p_nickname));
- if not found then raise exception 'No existe ese apodo'; end if;
+ if not found then return; end if;
  select * into v_pin from public.liga_tildes_pins p where p.player_id=v_player.id for update;
- if not found then raise exception 'El jugador todavía no ha configurado su PIN en su ordenador original'; end if;
+ if not found then return; end if;
  if v_pin.locked_until is not null and v_pin.locked_until>now()
- then raise exception 'Demasiados intentos: vuelve a intentarlo en 15 minutos'; end if;
+ then return; end if;
  if v_pin.pin_hash is distinct from extensions.crypt(p_pin,v_pin.pin_hash) then
   update public.liga_tildes_pins
   set failures=case when failures>=4 then 0 else failures+1 end,
   locked_until=case when failures>=4 then now()+interval '15 minutes' else null end
   where player_id=v_player.id;
-  raise exception 'PIN incorrecto';
+  return;
  end if;
  update public.liga_tildes_pins set failures=0,locked_until=null where player_id=v_player.id;
  insert into public.liga_tildes_access(player_id,user_id)
