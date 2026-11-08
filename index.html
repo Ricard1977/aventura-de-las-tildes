@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#6345db">
+  <meta name="description" content="Aprende las tildes jugando. Diez retos, amigos y clasificación.">
+  <title>La Liga de las Tildes ✨</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+ <div class="spark s1">✦</div><div class="spark s2">★</div><div class="spark s3">✧</div>
+ <div class="app-shell">
+  <header class="topbar">
+   <a class="brand" href="#" aria-label="Inicio"><span class="brand-icon">á</span><span>LA LIGA <small>DE LAS TILDES</small></span></a>
+   <div class="top-right"><span class="pill" id="mode-label">🟣 Modo local</span><button class="profile-chip" id="switch-profile" title="Cambiar jugador">👤 <span id="current-name">Entrar</span></button></div>
+  </header>
+  <main>
+   <section id="welcome" class="screen active">
+    <div class="hero">
+     <div class="hero-copy"><div class="eyebrow">🎮 MISIÓN ORTOGRAFÍA</div><h1>¡Las tildes son <em>tu superpoder!</em></h1><p>Resuelve retos, consigue estrellas y sube en la clasificación. ¿Serás el campeón o campeona de las palabras?</p><div class="hero-tags"><span>⚡ 10 retos por partida</span><span>🏆 Ranking de amigos</span><span>🎯 5.º y 6.º de Primaria</span></div></div>
+     <div class="mascot" aria-hidden="true"><div class="mascot-glow"></div><div class="face"><div class="accent">´</div><div class="eyes"><i></i><i></i></div><div class="smile">◡</div></div><div class="float-star star-a">⭐</div><div class="float-star star-b">✳️</div></div>
+    </div>
+    <div class="pane join"><div><h2>🚀 ¡Prepara tu aventura!</h2><p>Elige un apodo divertido y tu personaje. No uses tu nombre completo.</p></div>
+     <form id="join-form"><label for="nickname">TU APODO</label><input id="nickname" maxlength="18" minlength="3" autocomplete="off" placeholder="Ej.: RayoTilde7" required pattern="[A-Za-zÀ-ÿ0-9_-]{3,18}"><label>ELIGE UN AVATAR</label><div class="avatar-grid" id="avatars" role="group" aria-label="Elegir avatar"></div><button type="submit" class="btn primary">¡Quiero jugar! <span>➜</span></button><p class="small-note" id="join-message" role="status"></p></form>
+    </div>
+   </section>
+   <section id="home" class="screen"><div class="greeting"><div><div class="eyebrow">✦ TU CAMPAMENTO BASE</div><h1>¡Hola, <span id="hello-name">estrella</span>! 👋</h1><p>Tu próxima aventura ortográfica te espera.</p></div><div class="hero-avatar" id="home-avatar">🦊</div></div>
+    <div class="stats-grid"><div class="stat"><span>🌟 PUNTOS TOTALES</span><strong id="total-score">0</strong></div><div class="stat"><span>🎮 PARTIDAS</span><strong id="total-games">0</strong></div><div class="stat"><span>🎯 ACIERTOS</span><strong id="total-hits">0</strong></div></div>
+    <div class="home-grid"><div class="pane mission"><div class="eyebrow">🎯 NUEVA MISIÓN</div><h2>10 palabras, ¡a por todas!</h2><p>Cuatro tipos de retos sorpresa. Cada acierto suma <b>+1</b>, cada fallo resta <b>−0,5</b>.</p><div class="type-pills"><span>🔎 Sílaba tónica</span><span>✍️ Pon la tilde</span><span>🛠️ Corrige</span><span>🧠 Clasifica</span></div><button id="start-game" class="btn primary">Empezar partida <span>🚀</span></button></div>
+    <div class="pane mini-ranking"><div class="between"><h2>🏆 Clasificación</h2><button class="text-button" data-view="ranking">Ver todo →</button></div><div id="ranking-preview"></div><p class="small-note" id="ranking-status"></p></div></div>
+   </section>
+   <section id="game" class="screen"><div class="game-top"><div><div class="eyebrow">⚡ MISIÓN EN CURSO</div><h2>¡Demuestra lo que sabes!</h2></div><div class="game-points">⭐ <strong id="round-score">0</strong> <small>pts</small></div></div>
+    <div class="progress-label"><span id="card-count">Tarjeta 1 de 10</span><span id="cards-left">Quedan 9</span></div><div class="progress-track"><div id="progress-bar"></div></div>
+    <article class="question-card"><div class="card-badge" id="task-label">🔎 SÍLABA TÓNICA</div><div class="question-symbol" id="task-icon">🎯</div><h2 id="question-title">¿Cuál es la sílaba tónica?</h2><p id="question-hint">Pulsa la sílaba que suena más fuerte.</p><div id="question-area"></div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><button class="btn primary next-btn hidden" id="next-question">Siguiente tarjeta ➜</button></article>
+    <button id="leave-game" class="text-button centered">Salir de la partida</button>
+   </section>
+   <section id="results" class="screen"><div class="pane result-card"><div class="result-emoji" id="result-emoji">🏆</div><div class="eyebrow">MISIÓN COMPLETADA</div><h1 id="result-title">¡Menuda partida!</h1><p id="result-desc"></p><div class="result-score"><strong id="result-score">0</strong><span>puntos conseguidos</span></div><div class="result-breakdown"><span>✅ <b id="result-correct">0</b> aciertos</span><span>❌ <b id="result-wrong">0</b> fallos</span></div><div class="result-actions"><button id="play-again" class="btn primary">Jugar otra vez 🔁</button><button data-view="ranking" class="btn secondary">Ver clasificación 🏆</button></div></div></section>
+   <section id="ranking" class="screen"><div class="ranking-head"><div><div class="eyebrow">🏅 SALÓN DE LA FAMA</div><h1>La liga de campeones</h1><p>¡Cada partida cuenta! Compite con tus amigos y supera tu marca.</p></div><div class="trophy">🏆</div></div><div class="pane ranking-pane"><div class="between"><h2>Clasificación general</h2><span class="pill" id="ranking-mode">Este dispositivo</span></div><div class="ranking-table-head"><span>POS.</span><span>JUGADOR</span><span>PUNTOS</span></div><div id="ranking-list"></div><p id="ranking-explain" class="small-note"></p></div><button data-view="home" class="btn secondary">← Volver a jugar</button></section>
+  </main>
+  <nav class="bottom-nav" id="main-nav" aria-label="Navegación"><button data-view="home">🏠 <span>Inicio</span></button><button data-view="ranking">🏆 <span>Clasificación</span></button><button id="nav-profile">👤 <span>Jugador</span></button></nav>
+  <footer>Hecho para aprender jugando · No compartas datos personales 💜</footer>
+ </div>
+</body>
+</html>
