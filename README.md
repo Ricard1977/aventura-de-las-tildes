@@ -29,7 +29,7 @@ El banco incluye 60 entradas de agudas, llanas y esdrújulas. Se comprobaron reg
 ## Recuperar un jugador desde otro ordenador
 
 1. Ejecutar [login-pin.sql](login-pin.sql) una sola vez en el SQL Editor del proyecto Supabase (sin eliminar la tabla existente).
-2. Cada jugador que ya existía debe entrar una vez desde **su ordenador original** y configurar un PIN privado de 6–8 cifras en «Acceder desde otro ordenador». Sus puntos no se reinician.
+2. Cada jugador que ya existía debe entrar una vez desde **su ordenador original** y configurar un PIN privado de 1–4 cifras en «Acceder desde otro ordenador». Sus puntos no se reinician.
 3. En el nuevo dispositivo, escribir el mismo apodo y PIN y pulsar «Ya tengo jugador · Entrar con PIN».
 4. Para un jugador completamente nuevo, crear el apodo con un PIN; no compartas los PIN de los menores.
 
