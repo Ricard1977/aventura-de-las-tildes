@@ -17,11 +17,11 @@ Abre `index.html` en un navegador o sirve la carpeta con `python -m http.server 
 
 1. Crear proyecto gratuito en https://supabase.com/dashboard.
 2. En **Authentication > Sign In / Providers**, habilitar **Anonymous Sign-ins** (usuarios anónimos, sin correo).
-3. En **SQL Editor**, ejecutar `supabase.sql`.
+3. En **SQL Editor**, ejecutar `supabase.sql`, que crea la tabla independiente `liga_tildes_players` y sus permisos, sin modificar las tablas de otras aplicaciones.
 4. En **Project Settings > API**, copiar **Project URL** y **publishable/anon key**, NO `service_role` ni claves secretas.
-5. Pegar ambos valores en `config.js`, subir esa modificación a GitHub y recargar la web.
+5. `config.js` ya está configurado con la URL y la clave pública. No incluir claves secretas. Recargar la web después del despliegue.
 
-**Privacidad y limitaciones:** los apodos y puntuaciones son visibles públicamente en la clasificación. No pedir nombre real, escuela, correo, foto ni fecha de nacimiento. El perfil anónimo queda ligado a la sesión de navegador; si se borran los datos del navegador, se puede perder el acceso a ese perfil. La tabla tiene seguridad por fila (RLS) para que cada sesión modifique solo su fila, pero la puntuación se calcula en el cliente y no es resistente a trampas. Una competición formal necesitaría validar partidas desde un servicio de servidor. Para menores, administrar la web con supervisión adulta y política de privacidad apropiada.
+**Privacidad y limitaciones:** los apodos y puntuaciones son visibles públicamente en la clasificación. No pedir nombre real, escuela, correo, foto ni fecha de nacimiento. La clasificación es compartida entre ordenadores, pero cada perfil anónimo queda ligado a la sesión de navegador; si se borran los datos del navegador, se puede perder el acceso a ese perfil. La tabla tiene seguridad por fila (RLS) para que cada sesión modifique solo su fila, pero la puntuación se calcula en el cliente y no es resistente a trampas. Una competición formal necesitaría validar partidas desde un servicio de servidor. Para menores, administrar la web con supervisión adulta y política de privacidad apropiada.
 
 ## Selección de palabras
 
