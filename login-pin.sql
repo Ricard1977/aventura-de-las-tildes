@@ -21,19 +21,27 @@ create table if not exists public.liga_tildes_pins (
 alter table public.liga_tildes_pins enable row level security;
 revoke all on public.liga_tildes_pins from anon,authenticated;
 
+-- Función de permiso elevada: RLS no debe consultar directamente la tabla privada.
+create or replace function public.liga_player_has_access(p_player_id uuid)
+returns boolean language sql stable security definer set search_path=''
+as $$ select exists (
+ select 1 from public.liga_tildes_access a
+ where a.player_id=p_player_id and a.user_id=auth.uid()
+) $$;
+revoke all on function public.liga_player_has_access(uuid) from public;
+grant execute on function public.liga_player_has_access(uuid) to authenticated;
+
 -- Permitir edición a las sesiones autorizadas además del creador original.
 drop policy if exists "liga_update_own" on public.liga_tildes_players;
 create policy "liga_update_own" on public.liga_tildes_players
 for update to authenticated
 using (
  owner_id = (select auth.uid()) or
- exists(select 1 from public.liga_tildes_access a
-        where a.player_id=id and a.user_id=(select auth.uid()))
+ public.liga_player_has_access(id)
 )
 with check (
  owner_id = (select auth.uid()) or
- exists(select 1 from public.liga_tildes_access a
-        where a.player_id=id and a.user_id=(select auth.uid()))
+ public.liga_player_has_access(id)
 );
 
 create or replace function public.liga_set_pin(p_nickname text, p_pin text)
