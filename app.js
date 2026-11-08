@@ -45,15 +45,16 @@ async function syncProfile(p){
  const remote=await db.from('liga_tildes_players').select('id,owner_id,score,games,hits').ilike('nickname',p.name).maybeSingle();
  if(remote.error)throw remote.error;
  if(remote.data){
-  if(remote.data.owner_id!==authId)throw new Error('El apodo ya pertenece a otra sesión: '+p.name);
+  // La tabla de acceso por PIN permite que un jugador entre desde varios dispositivos.
   const serverScore=Number(remote.data.score)||0,serverGames=Number(remote.data.games)||0,serverHits=Number(remote.data.hits)||0;
   // Conservar los valores más altos de ambos lados al importar perfiles locales.
   p.score=Math.max(p.score,serverScore);
   p.games=Math.max(p.games,serverGames);
   p.hits=Math.max(p.hits,serverHits);
   save();
-  const update=await db.from('liga_tildes_players').update({avatar:p.avatar,score:p.score,games:p.games,hits:p.hits,updated_at:new Date().toISOString()}).eq('id',remote.data.id);
+  const update=await db.from('liga_tildes_players').update({avatar:p.avatar,score:p.score,games:p.games,hits:p.hits,updated_at:new Date().toISOString()}).eq('id',remote.data.id).select('id');
   if(update.error)throw update.error;
+  if(!update.data||update.data.length!==1)throw new Error('Esta sesión no tiene permiso de escritura para este jugador; utiliza su PIN.');
  }else{
   const created=await db.from('liga_tildes_players').insert({owner_id:authId,nickname:p.name,avatar:p.avatar,score:p.score,games:p.games,hits:p.hits});
   if(created.error)throw created.error;
@@ -155,6 +156,61 @@ $('admin-signout').onclick=async function(){
  adminAccess=false;$('admin-form').classList.remove('hidden');$('admin-content').classList.add('hidden');
  adminStatus('Sesión de administrador cerrada.');
 };
-$('join-form').onsubmit=async e=>{e.preventDefault();let name=$('nickname').value.trim();if(!/^[a-zA-ZÀ-ÿ0-9_-]{3,18}$/.test(name)){$('join-message').textContent='Usa entre 3 y 18 letras o números, sin espacios.';return}if(profiles[name]){$('join-message').textContent='Ese apodo ya existe en este dispositivo.';return}profiles[name]={name,avatar,score:0,games:0,hits:0};save();selectPlayer(name);await sync()};
+function validPin(pin){return /^[0-9]{6,8}$/.test(pin)}
+async function setPlayerPin(pin){
+ if(!onlineReady)throw new Error('Primero debe estar conectada la Liga global.');
+ if(!validPin(pin))throw new Error('El PIN debe tener entre 6 y 8 cifras.');
+ const result=await db.rpc('liga_set_pin',{p_nickname:player.name,p_pin:pin});
+ if(result.error)throw result.error;
+}
+$('set-pin-form').onsubmit=async function(e){
+ e.preventDefault();
+ const pin=$('set-pin-input').value;
+ $('set-pin-input').value='';
+ try{await setPlayerPin(pin);$('pin-status').textContent='PIN guardado. Ya puedes usar el mismo apodo y PIN en otro ordenador.'}
+ catch(e){$('pin-status').textContent='No se pudo guardar: '+(e.message||e)+'. Si falta la función, ejecuta login-pin.sql en Supabase.'}
+};
+$('join-form').onsubmit=async function(e){
+ e.preventDefault();
+ const name=$('nickname').value.trim(),pin=$('player-pin').value;
+ $('join-message').textContent='';
+ if(!/^[a-zA-ZÀ-ÿ0-9_-]{3,18}$/.test(name)){$('join-message').textContent='Usa un apodo de 3 a 18 letras o números.';return}
+ if(profiles[name]){
+  selectPlayer(name);
+  if(pin){try{await setPlayerPin(pin)}catch(err){$('pin-status').textContent='PIN no configurado: '+(err.message||err)}}
+  return;
+ }
+ if(onlineReady){
+  if(!validPin(pin)){$('join-message').textContent='Para crear un jugador global introduce un PIN de 6 a 8 cifras.';return}
+  try{
+   const found=await db.from('liga_tildes_players').select('id').ilike('nickname',name).maybeSingle();
+   if(found.error)throw found.error;
+   if(found.data){$('join-message').textContent='Este jugador ya existe. Pulsa «Ya tengo jugador» e introduce su PIN.';return}
+  }catch(e){$('join-message').textContent='No se pudo comprobar el apodo: '+(e.message||e);return}
+ }
+ profiles[name]={name:name,avatar:avatar,score:0,games:0,hits:0};
+ save();selectPlayer(name);
+ if(onlineReady){
+  await sync();
+  try{await setPlayerPin(pin);$('pin-status').textContent='PIN guardado para entrar desde otros ordenadores.'}
+  catch(e){$('pin-status').textContent='El perfil está creado, pero falta configurar el PIN: '+(e.message||e)}
+ }
+};
+$('login-player').onclick=async function(){
+ const name=$('nickname').value.trim(),pin=$('player-pin').value;
+ if(!name){$('join-message').textContent='Escribe primero tu apodo.';return}
+ if(profiles[name]){selectPlayer(name);return}
+ if(!onlineReady){$('join-message').textContent='Se necesita la Liga global para entrar desde otro dispositivo.';return}
+ if(!validPin(pin)){$('join-message').textContent='Introduce tu PIN de 6 a 8 cifras.';return}
+ $('join-message').textContent='Comprobando PIN...';
+ try{
+  const response=await db.rpc('liga_login_player',{p_nickname:name,p_pin:pin});
+  if(response.error)throw response.error;
+  if(!response.data||!response.data.length)throw new Error('Apodo o PIN incorrecto, o acceso bloqueado temporalmente.');
+  const p=response.data[0];
+  profiles[p.nickname]={name:p.nickname,avatar:p.avatar,score:Number(p.score),games:p.games,hits:p.hits};
+  save();$('player-pin').value='';selectPlayer(p.nickname);
+ }catch(e){$('join-message').textContent='No se pudo entrar: '+(e.message||e)+'. Si no has configurado tu PIN, hazlo desde el ordenador original.'}
+};
 $('switch-profile').onclick=$('nav-profile').onclick=()=>{player=null;$('nickname').value='';$('join-message').textContent='';view('welcome')};
 $('start-game').onclick=begin;$('play-again').onclick=begin;$('next-question').onclick=()=>{index++;index===10?finish():question()};$('leave-game').onclick=()=>{if(confirm('¿Salir de la partida? Perderás los puntos de esta ronda.'))view('home')};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>view(b.dataset.view));avatars();connect().then(()=>{const last=localStorage.getItem('liga-last-user');if(last&&profiles[last])selectPlayer(last);else view('welcome')});
