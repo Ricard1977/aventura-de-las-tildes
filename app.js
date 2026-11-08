@@ -3,7 +3,8 @@ const RAW=[
 ['canción','can-ción',1,'aguda'],['camión','ca-mión',1,'aguda'],['limón','li-món',1,'aguda'],['balón','ba-lón',1,'aguda'],['ratón','ra-tón',1,'aguda'],['jardín','jar-dín',1,'aguda'],['café','ca-fé',1,'aguda'],['sofá','so-fá',1,'aguda'],['compás','com-pás',1,'aguda'],['bebé','be-bé',1,'aguda'],['avión','a-vión',1,'aguda'],['jamás','ja-más',1,'aguda'],['papel','pa-pel',1,'aguda'],['reloj','re-loj',1,'aguda'],['animal','a-ni-mal',2,'aguda'],['pared','pa-red',1,'aguda'],['hotel','ho-tel',1,'aguda'],['doctor','doc-tor',1,'aguda'],['corazón','co-ra-zón',2,'aguda'],['colibrí','co-li-brí',2,'aguda'],
 ['árbol','ár-bol',0,'llana'],['lápiz','lá-piz',0,'llana'],['fácil','fá-cil',0,'llana'],['difícil','di-fí-cil',1,'llana'],['césped','cés-ped',0,'llana'],['azúcar','a-zú-car',1,'llana'],['móvil','mó-vil',0,'llana'],['fútbol','fút-bol',0,'llana'],['cárcel','cár-cel',0,'llana'],['débil','dé-bil',0,'llana'],['útil','ú-til',0,'llana'],['túnel','tú-nel',0,'llana'],['mesa','me-sa',0,'llana'],['libro','li-bro',0,'llana'],['ventana','ven-ta-na',1,'llana'],['camino','ca-mi-no',1,'llana'],['escuela','es-cue-la',1,'llana'],['zapato','za-pa-to',1,'llana'],['montaña','mon-ta-ña',1,'llana'],['examen','e-xa-men',1,'llana'],
 ['música','mú-si-ca',0,'esdrújula'],['pájaro','pá-ja-ro',0,'esdrújula'],['médico','mé-di-co',0,'esdrújula'],['teléfono','te-lé-fo-no',1,'esdrújula'],['brújula','brú-ju-la',0,'esdrújula'],['plátano','plá-ta-no',0,'esdrújula'],['sábado','sá-ba-do',0,'esdrújula'],['miércoles','miér-co-les',0,'esdrújula'],['rápido','rá-pi-do',0,'esdrújula'],['máquina','má-qui-na',0,'esdrújula'],['número','nú-me-ro',0,'esdrújula'],['página','pá-gi-na',0,'esdrújula'],['lámpara','lám-pa-ra',0,'esdrújula'],['cámara','cá-ma-ra',0,'esdrújula'],['príncipe','prín-ci-pe',0,'esdrújula'],['matemáticas','ma-te-má-ti-cas',2,'esdrújula'],['océano','o-cé-a-no',1,'esdrújula'],['semáforo','se-má-fo-ro',1,'esdrújula'],['triángulo','trián-gu-lo',0,'esdrújula'],['kilómetro','ki-ló-me-tro',1,'esdrújula']
-];
+]; 
+RAW.push(...(window.TILDES_EXTRA_WORDS||[]));
 const WORDS=RAW.map(([word,syllables,stress,kind])=>({word,syllables:syllables.split('-'),stress,kind}));
 const TYPES=['stress','accent','correct','classify'],AVATARS=['🦊','🐼','🦄','🐯','🐸','🐙','🐲','🐨','🐧','🦋','🐱','🚀'];
 const AVATAR_FILES=['fox','panda','unicorn','tiger','frog','octopus','dragon','koala','penguin','butterfly','cat','rocket'];
@@ -14,7 +15,7 @@ function load(){try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch{r
 function save(){localStorage.setItem(STORE,JSON.stringify(profiles))}
 function fmt(n){return (Math.round(n*2)/2).toLocaleString('es-ES',{maximumFractionDigits:1})}
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function plain(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function plain(s){return s.replace(/[áéíóúÁÉÍÓÚ]/g,c=>({'á':'a','é':'e','í':'i','ó':'o','ú':'u','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U'}[c]))}
 function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function view(id){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id));$('main-nav').style.display=player?'flex':'none';window.scrollTo(0,0);if(id==='home')home();if(id==='ranking')ranking()}
 function selectPlayer(name){player=profiles[name];localStorage.setItem('liga-last-user',name);$('current-name').textContent=name;view('home')}
@@ -69,7 +70,25 @@ async function syncAll(){
  for(const p of Object.values(profiles)){try{await syncProfile(p)}catch(e){console.warn(e)}}
 }
 function home(){if(!player)return;$('hello-name').textContent=player.name;$('home-avatar').innerHTML=avatarHtml(player.avatar);$('total-score').textContent=fmt(player.score);$('total-games').textContent=player.games;$('total-hits').textContent=player.hits;ranking(true)}
-function begin(){deck=shuffle(WORDS.slice()).slice(0,10).map((word,i)=>({word,type:TYPES[i%4]}));deck=shuffle(deck);index=0;score=0;hits=0;view('game');question()}
+function drawWords(n){
+ // Una bolsa aleatoria por jugador: se consumen todas las palabras antes de repetir.
+ const key='liga-tildes-wordbag-'+(player?player.name:'sin-jugador');
+ const all=WORDS.map(w=>w.word),lookup=new Map(WORDS.map(w=>[w.word,w]));
+ let bag;try{bag=JSON.parse(localStorage.getItem(key)||'[]')}catch{bag=[]}
+ if(!Array.isArray(bag)||bag.some(w=>!lookup.has(w)))bag=[];
+ const picked=[];
+ while(picked.length<n){
+  if(!bag.length){
+   const reserved=new Set(picked);
+   bag=shuffle(all.filter(w=>!reserved.has(w)));
+  }
+  const next=bag.pop();
+  if(!picked.includes(next))picked.push(next);
+ }
+ try{localStorage.setItem(key,JSON.stringify(bag))}catch(e){console.warn('Bolsa de palabras no guardada:',e)}
+ return picked.map(w=>lookup.get(w));
+}
+function begin(){deck=drawWords(10).map((word,i)=>({word,type:TYPES[i%4]}));deck=shuffle(deck);index=0;score=0;hits=0;view('game');question()}
 function addButton(area,label,ok){const b=document.createElement('button');b.className='answer';b.textContent=label;b.onclick=()=>answer(ok);area.append(b)}
 function question(){locked=false;const {word:w,type}=deck[index];$('card-count').textContent='Tarjeta '+(index+1)+' de 10';$('cards-left').textContent='Quedan '+(9-index);$('progress-bar').style.width=(index*10)+'%';$('round-score').textContent=fmt(score);$('feedback').textContent='';$('feedback').className='feedback';$('next-question').classList.add('hidden');$('next-question').textContent=index===9?'Ver resultado 🏆':'Siguiente tarjeta ➜';
 const info={stress:['🔎 SÍLABA TÓNICA','🎯','¿Cuál es la sílaba tónica?','Elige la sílaba que suena más fuerte.'],accent:['✍️ PON LA TILDE','✏️','¡Escribe la palabra correctamente!','Si no lleva tilde, escríbela sin tilde.'],correct:['🛠️ DETECTIVE','🕵️','¿Cuál es la escritura correcta?','Descubre el error de acentuación.'],classify:['🧠 CLASIFICA','🧠','¿Qué tipo de palabra es?','Piensa dónde está la sílaba tónica.']}[type];$('task-label').textContent=info[0];$('task-icon').textContent=info[1];$('question-title').textContent=info[2];$('question-hint').textContent=info[3];
