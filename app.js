@@ -20,7 +20,7 @@ function view(id){document.querySelectorAll('.screen').forEach(x=>x.classList.to
 function selectPlayer(name){player=profiles[name];localStorage.setItem('liga-last-user',name);$('current-name').textContent=name;view('home')}
 function avatars(){$('avatars').innerHTML=AVATARS.map(a=>'<button type="button" class="'+(a===avatar?'selected':'')+'" data-avatar="'+a+'" aria-label="Seleccionar avatar" aria-pressed="'+(a===avatar)+'">'+avatarHtml(a)+'</button>').join('');document.querySelectorAll('[data-avatar]').forEach(b=>b.onclick=()=>{avatar=b.dataset.avatar;avatars()})}
 async function connect(){
- if(!db)return;
+ if(!db){$('mode-label').textContent='⚠️ Sin conexión a Supabase';$('mode-label').title='Comprueba que se carga la librería de Supabase y config.js';return;}
  try{
   let result=await db.auth.getUser(),user=result.data&&result.data.user;
   if(!user){const session=await db.auth.signInAnonymously();if(session.error)throw session.error;user=session.data.user}
@@ -33,7 +33,11 @@ async function connect(){
  }catch(e){
   console.warn('Liga global no disponible:',e);
   onlineReady=false;
-  $('mode-label').textContent='🟣 Modo local';
+  var message=String((e&&e.message)||e||'Error de conexión');
+  var detail=/anonymous/i.test(message)?'Activa Anonymous Sign-Ins en Authentication > Providers':/liga_tildes_players|schema cache|does not exist/i.test(message)?'Ejecuta supabase.sql en el proyecto indicado':/fetch|network/i.test(message)?'No se puede conectar con Supabase desde este navegador':message.slice(0,130);
+  $('mode-label').textContent='⚠️ Liga local: conexión pendiente';
+  $('mode-label').title=detail;
+  var status=$('ranking-status');if(status)status.textContent='La liga global no está activa: '+detail;
  }
 }
 async function syncProfile(p){
